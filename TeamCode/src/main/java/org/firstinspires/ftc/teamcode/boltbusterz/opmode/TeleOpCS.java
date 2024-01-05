@@ -42,6 +42,7 @@ public class TeleOpCS extends OpMode {
     public ElapsedTime timer;
 
     public List<LynxModule> allHubs;
+    public int linearTargetTicks;
 
     @Override
     public void init() {
@@ -74,8 +75,8 @@ public class TeleOpCS extends OpMode {
     }
     @Override
     public void start() {
-        newGamepad1.copy(gamepad1);
-        newGamepad2.copy(gamepad2);
+        oldGamepad1.copy(gamepad1);
+        oldGamepad2.copy(gamepad2);
         plane.setPosition(planeIdle);
         claw.setPosition(opened);
     }
@@ -84,20 +85,16 @@ public class TeleOpCS extends OpMode {
         //read data
         int linearPos = linear.getCurrentPosition();
         double timeMS = timer.time(TimeUnit.MILLISECONDS);
-        oldGamepad1.copy(newGamepad1);
-        oldGamepad2.copy(newGamepad2);
-        newGamepad1.copy(gamepad1);
-        newGamepad2.copy(gamepad2);
 
         //inputs
         double rightStrafe = gamepad1.right_trigger;
         double leftStrafe = gamepad1.left_trigger;
         double leftTank = -gamepad1 .left_stick_y;
         double rightTank = -gamepad1.right_stick_y;
-        if (newGamepad2.right_bumper == !oldGamepad2.right_bumper || newGamepad2.left_bumper == !gamepad2.left_bumper){
+        if (gamepad2.right_bumper == !oldGamepad2.right_bumper || gamepad2.left_bumper == !oldGamepad2.left_bumper){
             clawToggle = !clawToggle;
         }
-        if (newGamepad2.dpad_up){
+        if (gamepad1.dpad_up){
             planeSafety = planeSafety + 1;
         }
         else{
@@ -106,10 +103,22 @@ public class TeleOpCS extends OpMode {
         if (planeSafety == 15){
             planeLaunch = true;
         }
+        if (gamepad2.a){
+            linearTargetTicks = 0;
+        }
+        if (newGamepad2.b == !oldGamepad2.b && !gamepad2.start){
+            linearTargetTicks = 2000;
+        }
+        if (gamepad2.x){
+            linearTargetTicks = 3000;
+        }
+        if (gamepad2.y){
+            linearTargetTicks = 4000;
+        }
 
 
         //calculations
-        slide.linearGoToMM(linearTarget);
+        slide.linearSetTicks(linearTargetTicks);
         linearPower = slide.PID(linearPos);
         boolean allowLinear = slide.safety(timeMS);
         double armTarget = slide.getArmTarget();
@@ -137,11 +146,13 @@ public class TeleOpCS extends OpMode {
 
         //telemetry
         telemetry.addData("linearPos",linearPos);
-        telemetry.addData("linearTarget", slide.MMToTick(linearTarget));
+        telemetry.addData("linearTarget", linearTargetTicks);
         telemetry.update();
         for (LynxModule hub : allHubs) {
             hub.clearBulkCache();
         }
+        oldGamepad1.copy(gamepad1);
+        oldGamepad2.copy(gamepad1);
     }
     @Override
     public void stop(){

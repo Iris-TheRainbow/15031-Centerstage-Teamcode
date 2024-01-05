@@ -8,7 +8,7 @@ public class MecanumDrive {
         this.throttle = throttle;
     }
     public double[] CalculatePower(double rightStrafe, double leftStrafe, double leftTank, double rightTank){
-        double[] inputs = {rightStrafe, leftStrafe, leftTank, rightTank, 1};
+        double[] inputs = {throttle * rightStrafe, throttle * leftStrafe, throttle * leftTank, throttle * rightTank, 1};
         double normalizer = Arrays.stream(inputs).max().getAsDouble();
         double frPower = (rightTank - rightStrafe + leftStrafe) * throttle / normalizer;
         double brPower = (rightTank + rightStrafe - leftStrafe) * throttle / normalizer;
