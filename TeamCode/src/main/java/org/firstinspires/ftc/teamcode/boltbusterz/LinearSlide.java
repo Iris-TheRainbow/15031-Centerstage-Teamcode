@@ -3,16 +3,15 @@ package org.firstinspires.ftc.teamcode.boltbusterz;
 import com.acmerobotics.dashboard.config.Config;
 import com.arcrobotics.ftclib.controller.PIDController;
 
-
 @Config
+@SuppressWarnings("unused")
 public class LinearSlide{
     public double SPOOL_CIRCUMFERENCE = 112; //spool circumference in MM
     public double TICK_PER_REV = 537.7;
     public double mmPerTick = (SPOOL_CIRCUMFERENCE / TICK_PER_REV);
-    private PIDController controller;
+    private final PIDController controller;
     public static double p = 0, i = 0, d = 0, f = 0;
     public int target, pos;
-    public boolean safe;
     public double goTime;
     public double armTarget;
     public static double move = .6, idle = .5, score = 0;
@@ -26,14 +25,12 @@ public class LinearSlide{
         target = ticks;
     }
     public int MMToTick(int mm){
-        int returnTicks = (int) (mm * mmPerTick);
-        return returnTicks;
+        return (int) (mm * mmPerTick);
     }
     public double PID(int pos){
         this.pos = pos;
         double pid = controller.calculate(pos, target);
-        double power = pid + f;
-        return power;
+        return pid + f;
     }
 
     public boolean safety(double time){
@@ -69,13 +66,7 @@ public class LinearSlide{
             armTarget = score;
             goTime = time;
         }
-        if (goTime <= time){
-            safe = true;
-        }
-        else{
-            safe = false;
-        }
-        return safe;
+        return goTime <= time;
     }
     public double getArmTarget(){
         return armTarget;

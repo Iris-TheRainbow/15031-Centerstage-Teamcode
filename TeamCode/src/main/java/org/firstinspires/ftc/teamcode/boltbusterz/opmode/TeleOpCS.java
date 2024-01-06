@@ -11,9 +11,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Gamepad;
-import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.boltbusterz.LinearSlide;
@@ -28,10 +26,9 @@ import java.util.concurrent.TimeUnit;
 public class TeleOpCS extends OpMode {
     public DcMotorEx leftFront, leftRear, rightRear, rightFront, linear;
     public Servo claw, plane, arm;
-    public Gamepad newGamepad1, newGamepad2, oldGamepad1, oldGamepad2;
+    public Gamepad oldGamepad1, oldGamepad2;
     public LinearSlide slide;
     public MecanumDrive drive;
-    public static int linearTarget = 0;
     public static int throttle = 1;
     public boolean clawToggle = false;
     public boolean planeLaunch = false;
@@ -60,8 +57,6 @@ public class TeleOpCS extends OpMode {
         slide = new LinearSlide();
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         drive = new MecanumDrive(throttle);
-        newGamepad1 = new Gamepad();
-        newGamepad2 = new Gamepad();
         oldGamepad1 = new Gamepad();
         oldGamepad2 = new Gamepad();
         List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
@@ -106,7 +101,7 @@ public class TeleOpCS extends OpMode {
         if (gamepad2.a){
             linearTargetTicks = 0;
         }
-        if (newGamepad2.b == !oldGamepad2.b && !gamepad2.start){
+        if (gamepad2.b == !oldGamepad2.b && !gamepad2.start){
             linearTargetTicks = 2000;
         }
         if (gamepad2.x){

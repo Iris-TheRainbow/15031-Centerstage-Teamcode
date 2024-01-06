@@ -14,7 +14,6 @@ public class MecanumDrive {
         double brPower = (rightTank + rightStrafe - leftStrafe) * throttle / normalizer;
         double blPower = (leftTank + leftStrafe - rightStrafe) * throttle / normalizer;
         double flPower = (leftTank - leftStrafe + rightStrafe) * throttle / normalizer;
-        double[] powers = {frPower, brPower, blPower, flPower};
-        return powers;
+        return new double[]{frPower, brPower, blPower, flPower};
     }
 }
