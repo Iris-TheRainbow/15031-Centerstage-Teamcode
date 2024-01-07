@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Locale;
 import java.util.function.DoubleSupplier;
 
-
 @SuppressWarnings("unused")
 public class ColourMassDetectionProcessor implements VisionProcessor {
 	private final DoubleSupplier minArea, left, right;

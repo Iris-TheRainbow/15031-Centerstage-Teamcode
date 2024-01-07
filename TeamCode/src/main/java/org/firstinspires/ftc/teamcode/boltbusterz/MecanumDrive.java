@@ -43,19 +43,17 @@ public class MecanumDrive {
         return new double[] {frPower, brPower, blPower, flPower};
     }
 
-    public double[] calculateOneStickPidHeadingPower(double driveX, double drvieY, double headingX, double headingY, double currentHeading){
-        direction = Math.atan2(drvieY, driveX) - Math.toRadians(currentHeading);
+    public double[] calculateTwoStickPower(double driveX, double driveY, double headingX, double headingY, double currentHeading){
+        direction = Math.atan2(driveY, driveX) - Math.toRadians(currentHeading);
         sin = Math.sin(direction - Math.PI/4);
         cos = Math.sin(direction - Math.PI/4);
-        power = Math.sqrt(driveX*driveX + drvieY*drvieY);
+        power = Math.sqrt(driveX*driveX + driveY*driveY);
         max = Math.max(Math.abs(sin), Math.abs(cos));
         targetHeading = currentHeading - Math.toDegrees(Math.atan2(headingY, headingX));
-        if (targetHeading > 180) {
-            targetHeading = (-360) + targetHeading;
-        } else if (targetHeading < -180) {
-            targetHeading= 360 + targetHeading;
-        }
-        turn = headingController.calculate(currentHeading, targetHeading);
+        if (targetHeading > 180) {targetHeading = (-360) + targetHeading;}
+        else if (targetHeading < -180) { targetHeading= 360 + targetHeading; }
+        if (Math.sqrt(headingX*headingX + headingY*headingY) > .5) { turn = headingController.calculate(currentHeading, targetHeading); }
+        else { turn = 0; }
         frPower = power * sin/max - turn;
         brPower = power * cos/max - turn;
         blPower = power * sin/max + turn;
