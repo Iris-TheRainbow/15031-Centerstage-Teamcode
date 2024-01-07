@@ -15,18 +15,10 @@ public class LinearSlide{
     public double goTime;
     public double armTarget;
     public static double move = .6, idle = .5, score = 0;
-    public LinearSlide(){
-        controller = new PIDController(p, i, d);
-    }
-    public void linearSetMM(int mm){
-        target = (int) (mm * mmPerTick);
-    }
-    public void linearSetTicks(int ticks){
-        target = ticks;
-    }
-    public int MMToTick(int mm){
-        return (int) (mm * mmPerTick);
-    }
+    public LinearSlide(){ controller = new PIDController(p, i, d); }
+    public void linearSetMM(int mm){ target = (int) (mm * mmPerTick); }
+    public void linearSetTicks(int ticks){ target = ticks; }
+    public int MMToTick(int mm){ return (int) (mm * mmPerTick); }
     public double PID(int pos){
         this.pos = pos;
         double pid = controller.calculate(pos, target);
@@ -34,17 +26,13 @@ public class LinearSlide{
     }
 
     public boolean safety(double time){
-        if (pos < 300 && target <= 300){
-            armTarget = idle;
-            goTime = time;
-        }
+        if (pos < 300 && target <= 300){ armTarget = idle; }
+        if (pos >= 1800 && target >= 1800){ armTarget = score; }
+        if (pos >= 3500){ armTarget = score; }
+        if (pos >= 300 && pos < 1800){ armTarget = move; }
         if (pos < 300 && target > 300){
             armTarget = move;
             goTime = time + 100;
-        }
-        if (pos >= 300 && pos < 1800){
-            armTarget = move;
-            goTime = time;
         }
         if (pos >= 1800 && pos < 2500 && target < 2000){
             armTarget = move;
@@ -58,18 +46,8 @@ public class LinearSlide{
             armTarget = move;
             goTime = time + 100;
         }
-        if (pos >= 1800 && target >= 1800){
-            armTarget = score;
-            goTime = time;
-        }
-        if (pos >= 3500){
-            armTarget = score;
-            goTime = time;
-        }
         return goTime <= time;
     }
-    public double getArmTarget(){
-        return armTarget;
-    }
+    public double getArmTarget(){ return armTarget; }
 
 }
