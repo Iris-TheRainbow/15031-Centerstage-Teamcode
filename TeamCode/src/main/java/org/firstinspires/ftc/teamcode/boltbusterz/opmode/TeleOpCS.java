@@ -91,6 +91,9 @@ public class TeleOpCS extends OpMode {
         double timeMS = timer.time(TimeUnit.MILLISECONDS);
         heading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
         correctedHeading = imuFixer.fixIMU(heading, timeMS) + heading;
+        if (correctedHeading == 99999999){
+            imu.initialize(parameters);
+        }
 
         //inputs
         double headingY = -gamepad1.right_stick_y;
