@@ -109,6 +109,7 @@ public class TeleOpCS extends OpMode {
         heading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
         if (linear.getCurrentPosition() < 300 && armTargetUpdate){ armTargetUpdate = false;}
         if (linear.getCurrentPosition() > 1800){ armTargetUpdate = true;}
+        if (armTarget ==  move) { clawToggle = false; }
 
 
 
@@ -127,6 +128,7 @@ public class TeleOpCS extends OpMode {
         if (gamepad2.y){ linearTargetTicks = 3500; armTargetUpdate = true;}
         if (gamepad2.dpad_down){ armTarget = .28; }
         if (gamepad2.dpad_up) {armTarget = idle;}
+
 
 
 
