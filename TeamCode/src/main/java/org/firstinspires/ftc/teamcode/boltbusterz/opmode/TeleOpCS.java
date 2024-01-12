@@ -1,6 +1,9 @@
 package org.firstinspires.ftc.teamcode.boltbusterz.opmode;
 
 import static org.firstinspires.ftc.teamcode.boltbusterz.LinearSlide.f;
+import static org.firstinspires.ftc.teamcode.boltbusterz.LinearSlide.idle;
+import static org.firstinspires.ftc.teamcode.boltbusterz.LinearSlide.move;
+
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
@@ -32,7 +35,7 @@ public class TeleOpCS extends OpMode {
     public DcMotorEx leftFront, leftRear, rightRear, rightFront, linear;
     public Servo claw, plane, arm;
     public IMU imu;
-    public Gamepad oldGamepad1, oldGamepad2;
+    public Gamepad oldGamepad1, oldGamepad2, newGamepad1, newGamepad2;
     public LinearSlide slide;
     public MecanumDrive drive;
     public ElapsedTime timer;
@@ -46,8 +49,10 @@ public class TeleOpCS extends OpMode {
     public boolean planeLaunch = false;
     public double throttle = 1;
     public int planeSafety = 0, loopCount = 0;
-    public static double launch = 0, planeIdle = .35;
-    public static double opened = 0, closed = 1;
+    public static double launch = .3 , planeIdle = 1;
+    public static double opened = .1, closed = .2;
+    public boolean armTargetUpdate;
+    public double armTarget = idle;
 
     @Override
     public void init() {
@@ -56,6 +61,8 @@ public class TeleOpCS extends OpMode {
         drive = new MecanumDrive(throttle);
         oldGamepad1 = new Gamepad();
         oldGamepad2 = new Gamepad();
+        newGamepad1 = new Gamepad();
+        newGamepad2 = new Gamepad();
         timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
         imuFixer = new IMUFixer();
         leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
@@ -81,52 +88,69 @@ public class TeleOpCS extends OpMode {
     @Override
     public void start() {
         loopCount = 0;
-        oldGamepad1.copy(gamepad1);
-        oldGamepad2.copy(gamepad2);
+        oldGamepad1.copy(newGamepad1);
+        oldGamepad2.copy(newGamepad2);
+        newGamepad1.copy(gamepad1);
+        newGamepad2.copy(gamepad2);
         plane.setPosition(planeIdle);
         claw.setPosition(opened);
+        arm.setPosition(idle);
     }
     @Override
     public void loop(){
         //read data
-        loopCount += loopCount;
+        oldGamepad2.copy(newGamepad2);
+        oldGamepad1.copy(newGamepad1);
+        newGamepad2.copy(gamepad2);
+        newGamepad1.copy(gamepad1);
+        loopCount = loopCount + 1;
         int linearPos = linear.getCurrentPosition();
         double timeMS = timer.time(TimeUnit.MILLISECONDS);
         heading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+        if (linear.getCurrentPosition() < 300 && armTargetUpdate){ armTargetUpdate = false;}
+        if (linear.getCurrentPosition() > 1800){ armTargetUpdate = true;}
+
+
 
         //inputs
         double headingY = -gamepad1.right_stick_y;
         double headingX = gamepad1.right_stick_x;
         double driveY = -gamepad1 .left_stick_y;
         double driveX = gamepad1.left_stick_x;
-        if (gamepad2.right_bumper == !oldGamepad2.right_bumper || gamepad2.left_bumper == !oldGamepad2.left_bumper){ clawToggle = !clawToggle; }
+        if (newGamepad2.right_bumper && !oldGamepad2.right_bumper || newGamepad2.left_bumper && !oldGamepad2.left_bumper){ clawToggle = !clawToggle; }
         if (gamepad1.dpad_up){ planeSafety = planeSafety + 1; }
         else{ planeSafety = 0; }
-        if (planeSafety == 50){ planeLaunch = true; }
-        if (gamepad2.a){ linearTargetTicks = 0;}
-        if (gamepad2.b == !oldGamepad2.b && !gamepad2.start){ linearTargetTicks = 2000; }
-        if (gamepad2.x){ linearTargetTicks = 3000; }
-        if (gamepad2.y){ linearTargetTicks = 4000; }
+        if (planeSafety == 50){ planeLaunch = true; armTargetUpdate = true;}
+        if (gamepad2.a){ linearTargetTicks = 0; armTargetUpdate = true;}
+        if (gamepad2.b == !oldGamepad2.b && !gamepad2.start){ linearTargetTicks = 2000; armTargetUpdate = true;}
+        if (gamepad2.x){ linearTargetTicks = 3000; armTargetUpdate = true;}
+        if (gamepad2.y){ linearTargetTicks = 3500; armTargetUpdate = true;}
+        if (gamepad2.dpad_down){ armTarget = .28; }
+        if (gamepad2.dpad_up) {armTarget = idle;}
+
+
 
         //calculations
         slide.linearSetTicks(linearTargetTicks);
         linearPower = slide.PID(linearPos);
         boolean allowLinear = slide.safety(timeMS);
-        double armTarget = slide.getArmTarget();
+        if (armTargetUpdate){
+            armTarget = slide.getArmTarget();
+        }
         if (!allowLinear) { linearPower = f;}
-        double[] drivePower = drive.calculateOneStickPower(driveX, driveY, headingY, heading);
+        double[] drivePower = drive.calculateOneStickPower(driveX, driveY, headingX, heading);
 
         //actions
         linear.setPower(linearPower);
         leftFront.setPower(drivePower[3]);
         leftRear.setPower(drivePower[2]);
         rightFront.setPower(drivePower[0]);
-        rightRear.setPower(drivePower[1
-                ]);
+        rightRear.setPower(drivePower[1]);
         arm.setPosition(armTarget);
         if (planeLaunch){ plane.setPosition(launch); }
         if (clawToggle){ claw.setPosition(opened); }
         else { claw.setPosition(closed); }
+        if (gamepad1.back){imu.resetYaw();}
 
         //telemetry
         telemetry.addData("heading: ", heading);
@@ -138,8 +162,7 @@ public class TeleOpCS extends OpMode {
         telemetry.addData("allowLinear", allowLinear);
         telemetry.addData("averageHz", (timeMS/(1000 * loopCount)));
         telemetry.update();
-        oldGamepad1.copy(gamepad1);
-        oldGamepad2.copy(gamepad1);
+
     }
     @Override
     public void stop(){ }

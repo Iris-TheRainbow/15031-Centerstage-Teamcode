@@ -14,7 +14,8 @@ public class LinearSlide{
     public int target, pos;
     public double goTime;
     public double armTarget;
-    public static double move = .5, idle = .6, score = 1;
+    public boolean allowed;
+    public static double move = .2, idle = .25, score = .8;
     public LinearSlide(){ controller = new PIDController(p, i, d); }
     public void linearSetMM(int mm){ target = (int) (mm * mmPerTick); }
     public void linearSetTicks(int ticks){ target = ticks; }
@@ -34,18 +35,29 @@ public class LinearSlide{
         if (pos < 300 && target > 300){
             armTarget = move;
         }
-        if (pos >= 1800 && pos < 2500 && target < 2000){
+        if (pos >= 1800 && pos < 2500 && target < 1800){
             armTarget = move;
-            goTime = time + 300;
+            if (allowed) {
+                goTime = time + 300;
+                allowed = false;
+            }
         }
-        if (pos >= 2500 && pos < 3000 && target < 2000){
+        if (pos >= 2500 && pos < 3000 && target < 1800){
             armTarget = move;
-            goTime = time + 200;
+            if (allowed) {
+                goTime = time + 200;
+                allowed = false;
+            }
         }
         if (pos >= 3000 && pos < 3500 && target < 1800){
             armTarget = move;
-            goTime = time + 100;
+            if (allowed) {
+                goTime = time + 100;
+                allowed = false;
+            }
         }
+        if (pos <= 1800)
+            allowed = true;
         if (goTime <= time){
             return true;
         }
