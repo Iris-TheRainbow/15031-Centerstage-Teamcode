@@ -111,8 +111,6 @@ public class TeleOpCS extends OpMode {
         if (linear.getCurrentPosition() > 1800){ armTargetUpdate = true;}
         if (armTarget ==  move) { clawToggle = false; }
 
-
-
         //inputs
         double headingY = -gamepad1.right_stick_y;
         double headingX = gamepad1.right_stick_x;
@@ -128,9 +126,6 @@ public class TeleOpCS extends OpMode {
         if (gamepad2.y){ linearTargetTicks = 3500; armTargetUpdate = true;}
         if (gamepad2.dpad_down){ armTarget = .28; }
         if (gamepad2.dpad_up) {armTarget = idle;}
-
-
-
 
         //calculations
         slide.linearSetTicks(linearTargetTicks);
@@ -162,9 +157,8 @@ public class TeleOpCS extends OpMode {
         telemetry.addData("TimeMS", timeMS);
         telemetry.addData("goTime", slide.getGoTime());
         telemetry.addData("allowLinear", allowLinear);
-        telemetry.addData("averageHz", (timeMS/(1000 * loopCount)));
+        telemetry.addData("averageHz", ((1000 * loopCount) / timeMS));
         telemetry.update();
-
     }
     @Override
     public void stop(){ }
