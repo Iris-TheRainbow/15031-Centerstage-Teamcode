@@ -48,10 +48,10 @@ public class TeleOpCS extends OpMode {
     public boolean clawToggle = false;
     public boolean planeLaunch = false;
     public double throttle = 1;
-    public int planeSafety = 0, loopCount = 0;
+    public int planeSafety = 0, loopCount = 0, manualSlides = 0;
     public static double launch = .3 , planeIdle = 1;
     public static double opened = .1, closed = .2;
-    public boolean armTargetUpdate;
+    public boolean armTargetUpdate, manualMode;
     public double armTarget = idle;
 
     @Override
@@ -126,15 +126,21 @@ public class TeleOpCS extends OpMode {
         if (gamepad2.y){ linearTargetTicks = 3500; armTargetUpdate = true;}
         if (gamepad2.dpad_down){ armTarget = .28; }
         if (gamepad2.dpad_up) {armTarget = idle;}
+        if (gamepad1.dpad_right){ manualSlides = manualSlides + 1; }
+        else{ manualSlides = 0; }
+        if (manualSlides == 100){ manualMode = true; }
 
         //calculations
-        slide.linearSetTicks(linearTargetTicks);
-        linearPower = slide.PID(linearPos);
+        if (!manualMode) {
+            slide.linearSetTicks(linearTargetTicks);
+            linearPower = slide.PID(linearPos);
+        }
         boolean allowLinear = slide.safety(timeMS);
         if (armTargetUpdate){
             armTarget = slide.getArmTarget();
         }
-        if (!allowLinear) { linearPower = f;}
+        if (!allowLinear || linear.getTargetPosition() < 30 && linearTargetTicks == 0 ) { linearPower = f;}
+        if (manualMode) {linearPower = gamepad1.right_trigger;}
         double[] drivePower = drive.calculateOneStickPower(driveX, driveY, headingX, heading);
 
         //actions

@@ -13,7 +13,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 
-@Autonomous(name = "Red Audience\ngo and drop")
+@Autonomous(name = "Red Backdrop\ngo and drop")
 public class RedBackdrop extends LinearOpMode {
     public Servo arm, claw;
     @Override
