@@ -10,12 +10,12 @@ public class LinearSlide{
     public double TICK_PER_REV = 537.7;
     public double mmPerTick = (SPOOL_CIRCUMFERENCE / TICK_PER_REV);
     private final PIDController controller;
-    public static double p = .005, i = 0, d = .0001, f = .00;
+    public static double p = .02, i = 0, d = .0001, f = .03;
     public int target, pos;
     public double goTime;
     public double armTarget;
     public boolean allowed;
-    public static double move = .2, idle = .25, score = .8;
+    public static double move = .2, idle = .25, score = .55;
     public LinearSlide(){ controller = new PIDController(p, i, d); }
     public void linearSetMM(int mm){ target = (int) (mm * mmPerTick); }
     public void linearSetTicks(int ticks){ target = ticks; }

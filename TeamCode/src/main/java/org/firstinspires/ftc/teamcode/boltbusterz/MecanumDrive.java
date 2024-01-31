@@ -1,11 +1,13 @@
 package org.firstinspires.ftc.teamcode.boltbusterz;
 
+import static org.firstinspires.ftc.teamcode.boltbusterz.opmode.TeleOpCS.visionTarget;
+
 import com.acmerobotics.dashboard.config.Config;
-import com.acmerobotics.roadrunner.control.PIDFController;
+//import com.acmerobotics.roadrunner.control.PIDFController;
 import com.arcrobotics.ftclib.controller.PIDController;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
+//import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+//import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 
 import java.util.Arrays;
 
@@ -13,11 +15,12 @@ import java.util.Arrays;
 @Config
 public class MecanumDrive {
     public double throttle;
-    public PIDController headingController;
+    public PIDController visionControler;
     public static double p = 0, i = 0, d = 0;
+    //private PIDFController headingController = new PIDFController(SampleMecanumDrive.HEADING_PID);
     public MecanumDrive(double throttle){
         this.throttle = throttle;
-        headingController = new PIDController(p, i, d);
+        visionControler = new PIDController(p, i, d);
     }
     double frPower, brPower, blPower, flPower;
     double sin, cos, power, max, direction, denominator, normalizer, rotX, rotY, angle, heading, radians, translatedHeading, turn;
@@ -31,6 +34,7 @@ public class MecanumDrive {
         return new double[] {frPower, brPower, blPower, flPower};
     }
     public  double[] calculateOneStickPower(double driveX, double driveY, double turn, double currentHeading){
+        visionControler.setPID(p,i,d);
         rotX = driveX * Math.cos(-currentHeading) - driveY * Math.sin(-currentHeading);
         rotY = driveX * Math.sin(-currentHeading) + driveY * Math.cos(-currentHeading);
         rotX = rotX * 1.1;
@@ -42,28 +46,15 @@ public class MecanumDrive {
         return new double[] {frPower, brPower, blPower, flPower};
     }
 
-    public double[] calculateTwoStickPower(double driveX, double driveY, double headingX, double headingY, double currentHeading){
-        headingController.setPID(p,i,d);
+    public double[] calculateTwoStickPower(double driveX, double driveY, double headingX, double headingY, double currentHeading, double actual, boolean allow){
         rotX = driveX * Math.cos(-currentHeading) - driveY * Math.sin(-currentHeading);
         rotY = driveX * Math.sin(-currentHeading) + driveY * Math.cos(-currentHeading);
         rotX = rotX * 1.1;
-        angle = Math.atan2(headingY, headingX);
-        heading = currentHeading + .5*Math.PI;
-        if (heading < 0){
-            heading += 2* Math.PI;
-        }
-        radians = angle - heading;
-        if (Math.sqrt((headingX*headingX + headingY*headingY)) > .5){
-            while (radians > Math.PI) {
-                radians -= 2 * Math.PI;
-            }
-            while (radians < -Math.PI) {
-                radians += 2 * Math.PI;
-            }
-            turn = headingController.calculate(heading,radians);
-        }
-        else{
-            turn = 0;
+        //headingController.setTargetPosition(Math.atan2(headingY, headingX));
+        //if (Math.sqrt(headingX*headingX + headingY*headingY) > .5){ turn = headingController.update(currentHeading); }
+        //else{turn = 0;}
+        if (allow) {
+            turn = visionControler.calculate(visionTarget, actual);
         }
         denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(turn), 1);
         flPower = (rotY + rotX + turn) / denominator;

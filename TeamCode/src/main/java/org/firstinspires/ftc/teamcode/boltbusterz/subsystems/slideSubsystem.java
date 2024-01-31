@@ -29,14 +29,11 @@ public class slideSubsystem extends SubsystemBase {
         double power = controller.calculate(target);
         linear.setPower(power + f);
     }
+    public double getPosition(){ return linear.getCurrentPosition();}
 
-    public void setPower(double power){
+
+    public void setManualPower(double power){
         linear.setPower(power);
     }
 
-
-    @Override
-    public void setDefaultCommand(Command defaultCommand) {
-
-    }
 }

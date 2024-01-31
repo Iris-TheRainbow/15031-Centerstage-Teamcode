@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.boltbusterz.opmode;
 
+import static org.firstinspires.ftc.teamcode.boltbusterz.LinearSlide.d;
 import static org.firstinspires.ftc.teamcode.boltbusterz.LinearSlide.f;
 import static org.firstinspires.ftc.teamcode.boltbusterz.LinearSlide.idle;
 import static org.firstinspires.ftc.teamcode.boltbusterz.LinearSlide.move;
@@ -19,11 +20,12 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.teamcode.boltbusterz.IMUFixer;
 import org.firstinspires.ftc.teamcode.boltbusterz.LinearSlide;
 import org.firstinspires.ftc.teamcode.boltbusterz.MecanumDrive;
-import org.firstinspires.ftc.teamcode.drive.DriveConstants;
+import org.firstinspires.ftc.teamcode.boltbusterz.PixelDetectionProcessor;
+import org.firstinspires.ftc.vision.VisionPortal;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -37,10 +39,9 @@ public class TeleOpCS extends OpMode {
     public IMU imu;
     public Gamepad oldGamepad1, oldGamepad2, newGamepad1, newGamepad2;
     public LinearSlide slide;
-    public MecanumDrive drive;
+    public MecanumDrive Drive;
     public ElapsedTime timer;
     public List<LynxModule> allHubs;
-    public IMUFixer imuFixer;
     public IMU.Parameters parameters;
     public double linearPower;
     public double heading, correctedHeading;
@@ -51,20 +52,22 @@ public class TeleOpCS extends OpMode {
     public int planeSafety = 0, loopCount = 0, manualSlides = 0;
     public static double launch = .3 , planeIdle = 1;
     public static double opened = .1, closed = .2;
+    public static int visionTarget = 150;
     public boolean armTargetUpdate, manualMode;
     public double armTarget = idle;
+    public VisionPortal visionPortal;
+    public PixelDetectionProcessor pixelDetectionProcessor;
 
     @Override
     public void init() {
         slide = new LinearSlide();
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
-        drive = new MecanumDrive(throttle);
+        Drive = new MecanumDrive(throttle);
         oldGamepad1 = new Gamepad();
         oldGamepad2 = new Gamepad();
         newGamepad1 = new Gamepad();
         newGamepad2 = new Gamepad();
         timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
-        imuFixer = new IMUFixer();
         leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
         leftRear = hardwareMap.get(DcMotorEx.class, "leftRear");
         rightRear = hardwareMap.get(DcMotorEx.class, "rightRear");
@@ -74,13 +77,19 @@ public class TeleOpCS extends OpMode {
         plane = hardwareMap.get(Servo.class, "planeServo");
         arm = hardwareMap.get(Servo.class, "armServo");
         imu = hardwareMap.get(IMU.class, "imu");
+        pixelDetectionProcessor = new PixelDetectionProcessor(visionTarget);
         parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
-                DriveConstants.LOGO_FACING_DIR, DriveConstants.USB_FACING_DIR));
+                RevHubOrientationOnRobot.LogoFacingDirection.UP,
+                RevHubOrientationOnRobot.UsbFacingDirection.RIGHT));
         imu.initialize(parameters);
         List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
         leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
         leftRear.setDirection(DcMotorSimple.Direction.REVERSE);
         for (LynxModule hub : allHubs) { hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO); }
+        visionPortal = new VisionPortal.Builder()
+                .setCamera(hardwareMap.get(WebcamName.class, "Cam")) // the camera on your robot is named "Webcam 1" by default
+                .addProcessor(pixelDetectionProcessor)
+                .build();
     }
 
     @Override
@@ -112,7 +121,6 @@ public class TeleOpCS extends OpMode {
         if (armTarget ==  move) { clawToggle = false; }
 
         //inputs
-        double headingY = -gamepad1.right_stick_y;
         double headingX = gamepad1.right_stick_x;
         double driveY = -gamepad1 .left_stick_y;
         double driveX = gamepad1.left_stick_x;
@@ -141,7 +149,7 @@ public class TeleOpCS extends OpMode {
         }
         if (!allowLinear || linear.getTargetPosition() < 30 && linearTargetTicks == 0 ) { linearPower = f;}
         if (manualMode) {linearPower = gamepad1.right_trigger;}
-        double[] drivePower = drive.calculateOneStickPower(driveX, driveY, headingX, heading);
+        double[] drivePower = Drive.calculateOneStickPower(driveX, driveY, headingX, heading);
 
         //actions
         linear.setPower(linearPower);
@@ -167,5 +175,8 @@ public class TeleOpCS extends OpMode {
         telemetry.update();
     }
     @Override
-    public void stop(){ }
+    public void stop(){
+        pixelDetectionProcessor.close();
+        visionPortal.close();
+    }
 }
