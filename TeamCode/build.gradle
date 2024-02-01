@@ -50,7 +50,7 @@ dependencies {
     implementation 'com.acmerobotics.roadrunner:actions:1.0.0-beta6'
     implementation 'org.ftclib.ftclib:core:2.1.1'
     implementation 'org.team11260:fast-load:0.1.2'
-    implementation('com.github.Dairy-Foundation.Dairy:Core:master-SNAPSHOT')
-    implementation('com.github.Dairy-Foundation.Dairy:Calcified:master-SNAPSHOT')
+    ///implementation('com.github.Dairy-Foundation.Dairy:Core:master-SNAPSHOT')
+    //implementation('com.github.Dairy-Foundation.Dairy:Calcified:master-SNAPSHOT')
     implementation "com.acmerobotics.roadrunner:ftc:0.1.12"
 }
