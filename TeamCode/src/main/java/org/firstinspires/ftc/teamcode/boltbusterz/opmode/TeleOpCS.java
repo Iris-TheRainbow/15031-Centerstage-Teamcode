@@ -74,6 +74,7 @@ public class TeleOpCS extends OpMode {
         rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
         linear = hardwareMap.get(DcMotorEx.class, "linear");
         claw = hardwareMap.get(Servo.class, "clawServo");
+        //TODO: PLANE NO WORKY
         plane = hardwareMap.get(Servo.class, "planeServo");
         arm = hardwareMap.get(Servo.class, "armServo");
         imu = hardwareMap.get(IMU.class, "imu");
