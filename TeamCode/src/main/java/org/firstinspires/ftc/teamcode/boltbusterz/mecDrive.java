@@ -13,12 +13,12 @@ import java.util.Arrays;
 
 @SuppressWarnings("unused")
 @Config
-public class MecanumDrive {
+public class mecDrive {
     public double throttle;
     public PIDController visionControler;
     public static double p = 0, i = 0, d = 0;
     //private PIDFController headingController = new PIDFController(SampleMecanumDrive.HEADING_PID);
-    public MecanumDrive(double throttle){
+    public mecDrive(double throttle){
         this.throttle = throttle;
         visionControler = new PIDController(p, i, d);
     }
@@ -33,16 +33,14 @@ public class MecanumDrive {
         flPower = (leftTank - leftStrafe + rightStrafe) * throttle / normalizer;
         return new double[] {frPower, brPower, blPower, flPower};
     }
-    public  double[] calculateOneStickPower(double driveX, double driveY, double turn, double currentHeading){
-        visionControler.setPID(p,i,d);
-        rotX = driveX * Math.cos(-currentHeading) - driveY * Math.sin(-currentHeading);
-        rotY = driveX * Math.sin(-currentHeading) + driveY * Math.cos(-currentHeading);
-        rotX = rotX * 1.1;
-        denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(turn), 1);
-        flPower = (rotY + rotX + turn) / denominator;
-        blPower = (rotY - rotX + turn) / denominator;
-        frPower = (rotY - rotX - turn) / denominator;
-        brPower = (rotY + rotX - turn) / denominator;
+    public  double[] calculateOneStickPower(double x, double y, double rx, double botHeading){
+        double rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
+        double rotY = x * Math.sin(-botHeading) + y * Math.cos(-botHeading);
+        double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(rx), 1);
+        double flPower = (rotY + rotX + rx) / denominator;
+        double blPower = (rotY - rotX + rx) / denominator;
+        double frPower = (rotY - rotX - rx) / denominator;
+        double brPower = (rotY + rotX - rx) / denominator;
         return new double[] {frPower, brPower, blPower, flPower};
     }
 

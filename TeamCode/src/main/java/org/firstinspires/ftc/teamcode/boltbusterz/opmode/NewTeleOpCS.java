@@ -1,7 +1,9 @@
 package org.firstinspires.ftc.teamcode.boltbusterz.opmode;
 
+import static org.firstinspires.ftc.teamcode.boltbusterz.LinearSlide.claw1Closed;
 import static org.firstinspires.ftc.teamcode.boltbusterz.LinearSlide.f;
 import static org.firstinspires.ftc.teamcode.boltbusterz.LinearSlide.idle;
+import static org.firstinspires.ftc.teamcode.boltbusterz.LinearSlide.move;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
@@ -19,19 +21,19 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.boltbusterz.LinearSlide;
-import org.firstinspires.ftc.teamcode.boltbusterz.MecanumDrive;
+import org.firstinspires.ftc.teamcode.boltbusterz.mecDrive;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Photon
-@TeleOp(name="TeleOp NEW NEW\n Centerstage\n lets go lt!!")
+@TeleOp(name="TeleOp NEW NEW\n Centerstage\n\n lets go lt!!")
 public class NewTeleOpCS extends OpMode {
     public LinearSlide slide;
-    public MecanumDrive Drive;
+    public mecDrive Drive;
     public Gamepad oldGamepad1, oldGamepad2, newGamepad1, newGamepad2;
     public ElapsedTime timer;
     public DcMotorEx leftFront, leftBack, rightBack, rightFront, linear;
-    public Servo claw, plane, arm;
+    public Servo clawTop, clawBottom, plane, arm;
     public IMU imu;
     public double heading, timeMS, armTarget, linearPower, headingX, driveY, driveX;
     public int linearPos, planeSafety, linearTargetTicks, manualSlides;
@@ -43,18 +45,19 @@ public class NewTeleOpCS extends OpMode {
     public void init() {
         slide = new LinearSlide();
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
-        Drive = new MecanumDrive(throttle);
+        Drive = new mecDrive(throttle);
         oldGamepad1 = new Gamepad();
         oldGamepad2 = new Gamepad();
         newGamepad1 = new Gamepad();
         newGamepad2 = new Gamepad();
         timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
         leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
-        leftBack = hardwareMap.get(DcMotorEx.class, "leftRear");
-        rightBack = hardwareMap.get(DcMotorEx.class, "rightRear");
+        leftBack = hardwareMap.get(DcMotorEx.class, "leftBack");
+        rightBack = hardwareMap.get(DcMotorEx.class, "rightBack");
         rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
         linear = hardwareMap.get(DcMotorEx.class, "linear");
-        claw = hardwareMap.get(Servo.class, "clawServo");
+        clawTop = hardwareMap.get(Servo.class, "clawServo2");
+        clawBottom = hardwareMap.get(Servo.class, "clawServo");
         plane = hardwareMap.get(Servo.class, "planeServo");
         arm = hardwareMap.get(Servo.class, "armServo");
         imu = hardwareMap.get(IMU.class, "imu");
@@ -77,6 +80,8 @@ public class NewTeleOpCS extends OpMode {
 
     @Override
     public void start() {
+        slide.allClose();
+        armTargetUpdate = true;
         oldGamepad1.copy(newGamepad1);
         oldGamepad2.copy(newGamepad2);
         newGamepad1.copy(gamepad1);
@@ -99,15 +104,18 @@ public class NewTeleOpCS extends OpMode {
         heading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
 
         //read gamepads
-        if (newGamepad2.right_bumper && !oldGamepad2.right_bumper || newGamepad2.left_bumper && !oldGamepad2.left_bumper) {
-            clawToggle = !clawToggle;
+        if (newGamepad2.right_bumper && !oldGamepad2.right_bumper) {
+            slide.topOpen();
+        }
+        if (newGamepad2.left_bumper && !oldGamepad2.left_bumper) {
+            slide.bottomOpen();
+        }
+        if (newGamepad2.y){
+            slide.allClose();
         }
         headingX = gamepad1.right_stick_x;
         driveY = -gamepad1.left_stick_y;
         driveX = gamepad1.left_stick_x;
-        if (newGamepad2.right_bumper && !oldGamepad2.right_bumper || newGamepad2.left_bumper && !oldGamepad2.left_bumper) {
-            clawToggle = !clawToggle;
-        }
         if (gamepad1.dpad_up) {
             planeSafety = planeSafety + 1;
         } else {
@@ -129,23 +137,17 @@ public class NewTeleOpCS extends OpMode {
             linearTargetTicks = 3000;
             armTargetUpdate = true;
         }
-        if (gamepad2.y) {
-            linearTargetTicks = 3500;
-            armTargetUpdate = true;
-        }
-        if (gamepad2.dpad_down) {
-            armTarget = .28;
-        }
-        if (gamepad2.dpad_up) {
-            armTarget = idle;
-        }
         if (gamepad1.dpad_right) {
             manualSlides = manualSlides + 1;
-        } else {
+        }
+        else {
             manualSlides = 0;
         }
         if (manualSlides == 100) {
             manualMode = true;
+        }
+        if(newGamepad1.dpad_down){
+            manualMode = false;
         }
 
         //calculate taret hardware states
@@ -157,11 +159,11 @@ public class NewTeleOpCS extends OpMode {
         if (armTargetUpdate) {
             armTarget = slide.getArmTarget();
         }
-        if (!allowLinear || linear.getTargetPosition() < 30 && linearTargetTicks == 0) {
+        if (!allowLinear) {
             linearPower = f;
         }
         if (manualMode) {
-            linearPower = gamepad1.right_trigger;
+            linearPower = gamepad1.right_trigger + -gamepad1.left_trigger;
         }
         drivePower = Drive.calculateOneStickPower(driveX, driveY, headingX, heading);
 
@@ -182,11 +184,12 @@ public class NewTeleOpCS extends OpMode {
             rightBack.setPower(drivePower[1]);
         }
 
-        if (armTarget != arm.getPosition()) {
-            arm.setPosition(armTarget);
+        arm.setPosition(armTarget);
+        if (manualMode){
+            arm.setPosition(move);
         }
-
-
+        clawTop.setPosition(slide.getClaw2());
+        clawBottom.setPosition(slide.getClaw1());
     }
     @Override
     public void stop(){

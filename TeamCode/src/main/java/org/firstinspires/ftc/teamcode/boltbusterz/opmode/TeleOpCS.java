@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.boltbusterz.opmode;
 
-import static org.firstinspires.ftc.teamcode.boltbusterz.LinearSlide.d;
 import static org.firstinspires.ftc.teamcode.boltbusterz.LinearSlide.f;
 import static org.firstinspires.ftc.teamcode.boltbusterz.LinearSlide.idle;
 import static org.firstinspires.ftc.teamcode.boltbusterz.LinearSlide.move;
@@ -11,6 +10,7 @@ import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.outoftheboxrobotics.photoncore.Photon;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -23,13 +23,13 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.boltbusterz.LinearSlide;
-import org.firstinspires.ftc.teamcode.boltbusterz.MecanumDrive;
+import org.firstinspires.ftc.teamcode.boltbusterz.mecDrive;
 import org.firstinspires.ftc.teamcode.boltbusterz.PixelDetectionProcessor;
 import org.firstinspires.ftc.vision.VisionPortal;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
+@Disabled
 @Photon
 @Config
 @TeleOp(name="TeleOp New Version Centerstage")
@@ -39,7 +39,7 @@ public class TeleOpCS extends OpMode {
     public IMU imu;
     public Gamepad oldGamepad1, oldGamepad2, newGamepad1, newGamepad2;
     public LinearSlide slide;
-    public MecanumDrive Drive;
+    public mecDrive Drive;
     public ElapsedTime timer;
     public List<LynxModule> allHubs;
     public IMU.Parameters parameters;
@@ -62,15 +62,15 @@ public class TeleOpCS extends OpMode {
     public void init() {
         slide = new LinearSlide();
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
-        Drive = new MecanumDrive(throttle);
+        Drive = new mecDrive(throttle);
         oldGamepad1 = new Gamepad();
         oldGamepad2 = new Gamepad();
         newGamepad1 = new Gamepad();
         newGamepad2 = new Gamepad();
         timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
         leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
-        leftRear = hardwareMap.get(DcMotorEx.class, "leftRear");
-        rightRear = hardwareMap.get(DcMotorEx.class, "rightRear");
+        leftRear = hardwareMap.get(DcMotorEx.class, "leftBack");
+        rightRear = hardwareMap.get(DcMotorEx.class, "rightBack");
         rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
         linear = hardwareMap.get(DcMotorEx.class, "linear");
         claw = hardwareMap.get(Servo.class, "clawServo");
@@ -87,7 +87,7 @@ public class TeleOpCS extends OpMode {
         leftRear.setDirection(DcMotorSimple.Direction.REVERSE);
         for (LynxModule hub : allHubs) { hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO); }
         visionPortal = new VisionPortal.Builder()
-                .setCamera(hardwareMap.get(WebcamName.class, "Cam")) // the camera on your robot is named "Webcam 1" by default
+                .setCamera(hardwareMap.get(WebcamName.class, "cam")) // the camera on your robot is named "Webcam 1" by default
                 .addProcessor(pixelDetectionProcessor)
                 .build();
     }
@@ -149,7 +149,7 @@ public class TeleOpCS extends OpMode {
         }
         if (!allowLinear || linear.getTargetPosition() < 30 && linearTargetTicks == 0 ) { linearPower = f;}
         if (manualMode) {linearPower = gamepad1.right_trigger;}
-        double[] drivePower = Drive.calculateOneStickPower(driveX, driveY, headingX, heading);
+        double[] drivePower = Drive.calculateOneStickPower(driveX, driveY, headingX, 0);
 
         //actions
         linear.setPower(linearPower);
