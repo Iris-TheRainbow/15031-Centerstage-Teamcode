@@ -16,8 +16,8 @@ public class LinearSlide{
     public double armTarget;
     public double claw1, claw2;
     public boolean downAllowed = true, upAllowed = true, oneOpen = false;
-    public static double move = .15, idle = .26, score = .6;
-    public static double claw1Open = .4, claw2open = .25, claw1Closed = .60, claw2Closed = 0;
+    public static double move = .15  , idle = .28, score = .58;
+    public static double claw1Open = 1, claw2open = .25, claw1Closed = .5, claw2Closed = 0;
     public LinearSlide(){ controller = new PIDController(p, i, d); }
     public void bottomOpen(){
         claw1 = claw1Open;
@@ -68,7 +68,7 @@ public class LinearSlide{
             armTarget = move;
             if (downAllowed) {
                 allClose();
-                goTime = time + 300;
+                goTime = time + 500;
                 downAllowed = false;
             }
         }
@@ -76,7 +76,7 @@ public class LinearSlide{
             armTarget = move;
             if (downAllowed) {
                 allClose();
-                goTime = time + 200;
+                goTime = time + 350;
                 downAllowed = false;
             }
         }
@@ -84,7 +84,7 @@ public class LinearSlide{
             armTarget = move;
             if (downAllowed) {
                 allClose();
-                goTime = time + 100;
+                goTime = time + 200;
                 downAllowed = false;
             }
         }

@@ -4,14 +4,9 @@ package org.firstinspires.ftc.teamcode.boltbusterz.opmode;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.SequentialAction;
-import com.acmerobotics.roadrunner.Trajectory;
-import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
-import com.outoftheboxrobotics.photoncore.Photon;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -23,13 +18,15 @@ import org.firstinspires.ftc.vision.VisionPortal;
 import org.opencv.core.Scalar;
 
 import java.util.concurrent.TimeUnit;
+
 @Config
-@Autonomous(name = "BLUE_TEST_AUTO_PIXEL", group = "Autonomous")
-public class BlueAutoBackdrop extends OpMode{    private VisionPortal visionPortal;
+@Autonomous(name = "Red auto", group = "Autonomous")
+public class RedAuto extends OpMode{
+    private VisionPortal visionPortal;
     private ColourMassDetectionProcessor colourMassDetectionProcessor;
     private Servo topClaw, bottomClaw, arm;
     private DcMotor linear;
-    public Action left, center, right, backdropLeft, backdropCenter, backdropRight, park;
+    public Action left, center, right, backdropLeft, backdropCenter, backdropRight, park, downfield;
     public MecanumDrive drive;
     public static double claw1Open = 1, claw2open = .25, claw1Closed = .50, claw2Closed = 0;
     public static double move = .15, idle = .26, score = .6;
@@ -67,10 +64,9 @@ public class BlueAutoBackdrop extends OpMode{    private VisionPortal visionPort
     }
     @Override
     public void init() {
-        MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(11.8, 61.7, Math.toRadians(-90)));
-        //TODO: TUNE THESE!!!!!!
-        Scalar lower = new Scalar(80, 150, 80); // the lower hsv threshold for your detection
-        Scalar upper = new Scalar(115, 210, 255); // the upper hsv threshold for your detection
+        MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(11.8, -61.7, Math.toRadians(90)));
+        Scalar lower = new Scalar(150, 90, 90); // the lower hsv threshold for your detection
+        Scalar upper = new Scalar(210, 210, 210); // the upper hsv threshold for your detection
         double minArea = 100; // the minimum area for the detection to consider for your prop
         linear = hardwareMap.get(DcMotor.class, "linear");
         topClaw = hardwareMap.get(Servo.class, "clawServo2");
@@ -81,22 +77,23 @@ public class BlueAutoBackdrop extends OpMode{    private VisionPortal visionPort
                 lower,
                 upper,
                 () -> minArea, // these are lambda methods, in case we want to change them while the match is running, for us to tune them or something
-                () -> 213, // the left dividing line, in this case the left third of the frame
-                () -> 426 // the left dividing line, in this case the right third of the frame
+                () -> 200, // the left dividing line, in this case the left third of the frame
+                () -> 5000 // the left dividing line, in this case the right third of the frame
         );
         visionPortal = new VisionPortal.Builder()
                 .setCamera(hardwareMap.get(WebcamName.class, "cam")) // the camera on your robot is named "Webcam 1" by default
                 .addProcessor(colourMassDetectionProcessor)
                 .build();
         left = drive.actionBuilder(drive.pose)
-                .splineTo(new Vector2d(29, 35),Math.toRadians(-140))
+                .splineTo(new Vector2d(29, -35),Math.toRadians(140))
                 .build();
         center = drive.actionBuilder(drive.pose)
-                .splineToSplineHeading(new Pose2d(17, 27, Math.toRadians(-140)),Math.toRadians(-140))
+                .splineToSplineHeading(new Pose2d(17, -27, Math.toRadians(140)),Math.toRadians(140))
                 .build();
         right = drive.actionBuilder(drive.pose)
-                .splineToSplineHeading(new Pose2d(17, 27, Math.toRadians(-140)),Math.toRadians(-140))
+                .splineToSplineHeading(new Pose2d(17, -27, Math.toRadians(140)),Math.toRadians(140))
                 .build();
+        downfield = drive.actionBuilder(drive.pose).turnTo(90).build();
         backdropLeft = drive.actionBuilder(drive.pose).setReversed(true).splineTo(new Vector2d(38, 42), Math.toRadians(0)).build();
         backdropCenter = drive.actionBuilder(drive.pose).setReversed(true).splineTo(new Vector2d(38, 36), Math.toRadians(0)).build();
         backdropRight = drive.actionBuilder(drive.pose).setReversed(true).splineTo(new Vector2d(38, 30), Math.toRadians(0)).build();
@@ -126,6 +123,7 @@ public class BlueAutoBackdrop extends OpMode{    private VisionPortal visionPort
             case LEFT:
                 Actions.runBlocking(left);
                 purplePixel();
+                Actions.runBlocking(downfield);
                 //Actions.runBlocking(backdropLeft);
                 //yellowPixel();
                 //Actions.runBlocking(park);
@@ -133,6 +131,7 @@ public class BlueAutoBackdrop extends OpMode{    private VisionPortal visionPort
             case MIDDLE:
                 Actions.runBlocking(center);
                 purplePixel();
+                Actions.runBlocking(downfield);
                 //Actions.runBlocking(backdropCenter);
                 //yellowPixel();
                 //Actions.runBlocking(park);
@@ -140,10 +139,12 @@ public class BlueAutoBackdrop extends OpMode{    private VisionPortal visionPort
             case RIGHT:
                 Actions.runBlocking(right);
                 purplePixel();
+                Actions.runBlocking(downfield);
                 //Actions.runBlocking(backdropRight);
                 //yellowPixel();
                 //Actions.runBlocking(park);
                 break;
+
         }
     }
     @Override

@@ -37,10 +37,10 @@ public class mecDrive {
         double rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
         double rotY = x * Math.sin(-botHeading) + y * Math.cos(-botHeading);
         double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(rx), 1);
-        double flPower = (rotY + rotX + rx) / denominator;
-        double blPower = (rotY - rotX + rx) / denominator;
-        double frPower = (rotY - rotX - rx) / denominator;
-        double brPower = (rotY + rotX - rx) / denominator;
+        double flPower = (rotY + rotX + rx) / denominator / 1.1;
+        double blPower = (rotY - rotX + rx) / denominator / 1.1;
+        double frPower = (rotY - rotX - rx) / denominator * 1.1;
+        double brPower = (rotY + rotX - rx) / denominator / 1.1;
         return new double[] {frPower, brPower, blPower, flPower};
     }
 

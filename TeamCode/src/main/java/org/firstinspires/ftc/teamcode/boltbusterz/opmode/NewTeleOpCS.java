@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.boltbusterz.opmode;
 
+import static com.qualcomm.robotcore.hardware.Servo.Direction.REVERSE;
 import static org.firstinspires.ftc.teamcode.boltbusterz.LinearSlide.claw1Closed;
 import static org.firstinspires.ftc.teamcode.boltbusterz.LinearSlide.f;
 import static org.firstinspires.ftc.teamcode.boltbusterz.LinearSlide.idle;
@@ -37,7 +38,7 @@ public class NewTeleOpCS extends OpMode {
     public IMU imu;
     public double heading, timeMS, armTarget, linearPower, headingX, driveY, driveX;
     public int linearPos, planeSafety, linearTargetTicks, manualSlides;
-    public boolean clawToggle, planeLaunch, armTargetUpdate, manualMode;
+    public boolean clawToggle, planeLaunch, armTargetUpdate, manualMode, rc = false;
     public double throttle = 1;
     public double[] drivePower;
 
@@ -61,9 +62,10 @@ public class NewTeleOpCS extends OpMode {
         plane = hardwareMap.get(Servo.class, "planeServo");
         arm = hardwareMap.get(Servo.class, "armServo");
         imu = hardwareMap.get(IMU.class, "imu");
+        plane.setDirection(REVERSE);
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
                 RevHubOrientationOnRobot.LogoFacingDirection.UP,
-                RevHubOrientationOnRobot.UsbFacingDirection.RIGHT));
+                RevHubOrientationOnRobot.UsbFacingDirection.LEFT));
         imu.initialize(parameters);
         List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
         leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -71,6 +73,7 @@ public class NewTeleOpCS extends OpMode {
         for (LynxModule hub : allHubs) {
             hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
         }
+        plane.setPosition(1);
     }
 
     @Override
@@ -88,6 +91,7 @@ public class NewTeleOpCS extends OpMode {
         newGamepad2.copy(gamepad2);
         linearTargetTicks = 0;
         manualMode = false;
+        rc = false;
     }
 
     @Override
@@ -102,6 +106,9 @@ public class NewTeleOpCS extends OpMode {
         linearPos = linear.getCurrentPosition();
         timeMS = timer.time(TimeUnit.MILLISECONDS);
         heading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+        if (rc){
+            heading = 0;
+        }
 
         //read gamepads
         if (newGamepad2.right_bumper && !oldGamepad2.right_bumper) {
@@ -139,22 +146,27 @@ public class NewTeleOpCS extends OpMode {
         }
         if (gamepad1.dpad_right) {
             manualSlides = manualSlides + 1;
+            slide.allClose();
         }
         else {
             manualSlides = 0;
         }
-        if (manualSlides == 100) {
+        if (manualSlides == 50) {
             manualMode = true;
         }
         if(newGamepad1.dpad_down){
             manualMode = false;
         }
+        if (gamepad1.left_stick_button){ imu.resetYaw(); }
 
         //calculate taret hardware states
         if (!manualMode) {
             slide.linearSetTicks(linearTargetTicks);
             linearPower = slide.PID(linearPos);
         }
+        //if(gamepad1.dpad_left){
+            //rc = true;
+        //}
         boolean allowLinear = slide.safety(timeMS);
         if (armTargetUpdate) {
             armTarget = slide.getArmTarget();
@@ -190,6 +202,10 @@ public class NewTeleOpCS extends OpMode {
         }
         clawTop.setPosition(slide.getClaw2());
         clawBottom.setPosition(slide.getClaw1());
+        if (planeLaunch) {
+            plane.setPosition(0);
+        }
+        telemetry.addData("heading: ", heading);
     }
     @Override
     public void stop(){
